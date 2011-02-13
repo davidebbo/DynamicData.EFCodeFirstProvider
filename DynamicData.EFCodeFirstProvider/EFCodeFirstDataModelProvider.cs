@@ -30,10 +30,10 @@ namespace DynamicData.EFCodeFirstProvider {
             RelationshipEndLookup = new Dictionary<long, EFCodeFirstColumnProvider>();
             TableEndLookup = new Dictionary<EntityType, EFCodeFirstTableProvider>();
 
-            var dbContext = contextFactory();
-            _objectContext = ((IObjectContextAdapter)dbContext).ObjectContext;
-            _objectContext = (ObjectContext)CreateContext();
+            DbContext dbContext = contextFactory();
             ContextType = dbContext.GetType();
+
+            _objectContext = (ObjectContext)CreateContext();
 
             // get a "container" (a scope at the instance level)
             EntityContainer container = _objectContext.MetadataWorkspace.GetEntityContainer(_objectContext.DefaultContainerName, DataSpace.CSpace);
