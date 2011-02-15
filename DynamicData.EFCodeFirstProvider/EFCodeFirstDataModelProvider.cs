@@ -16,29 +16,40 @@ namespace DynamicData.EFCodeFirstProvider {
 
         internal Dictionary<long, EFCodeFirstColumnProvider> RelationshipEndLookup { get; private set; }
         internal Dictionary<EntityType, EFCodeFirstTableProvider> TableEndLookup { get; private set; }
-        private Func<object> ContextFactory { get; set; }
+        private Func<ObjectContext> ContextFactory { get; set; }
         private Dictionary<EdmType, Type> _entityTypeToClrType = new Dictionary<EdmType, Type>();
         private ObjectContext _objectContext;
         private ObjectItemCollection _objectSpaceItems;
 
-        public EFCodeFirstDataModelProvider(Func<DbContext> contextFactory) {
+        public EFCodeFirstDataModelProvider(Func<DbContext> dbContextFactory) {
+            // First, instantiate a DbContext just to get the type its type
+            ContextType = dbContextFactory().GetType();
+
+            // This is the code that gets called anytime an ObjectContext needs to be created
             ContextFactory = () => {
                 // Create the DbContext and get the underlying ObjectContext out of it
-                return ((IObjectContextAdapter)contextFactory()).ObjectContext;
+                DbContext dbContext = dbContextFactory();
+                var context = ((IObjectContextAdapter)dbContext).ObjectContext;
+
+                // Set the DefaultContainerName to the context name if it's not set
+                if (String.IsNullOrEmpty(context.DefaultContainerName)) {
+                    context.DefaultContainerName = ContextType.Name;
+                }
+
+                // Load the workspace from the context's assembly
+                // See http://social.msdn.microsoft.com/Forums/en-US/adonetefx/thread/53fc5d64-5ff3-4e9f-ae7c-795d1eb750d2
+                context.MetadataWorkspace.LoadFromAssembly(ContextType.Assembly);
+
+                return context;
             };
 
             RelationshipEndLookup = new Dictionary<long, EFCodeFirstColumnProvider>();
             TableEndLookup = new Dictionary<EntityType, EFCodeFirstTableProvider>();
 
-            DbContext dbContext = contextFactory();
-            ContextType = dbContext.GetType();
-
-            _objectContext = (ObjectContext)CreateContext();
+            _objectContext = ContextFactory();
 
             // get a "container" (a scope at the instance level)
             EntityContainer container = _objectContext.MetadataWorkspace.GetEntityContainer(_objectContext.DefaultContainerName, DataSpace.CSpace);
-            // load object space metadata
-            _objectContext.MetadataWorkspace.LoadFromAssembly(ContextType.Assembly);
             _objectSpaceItems = (ObjectItemCollection)_objectContext.MetadataWorkspace.GetItemCollection(DataSpace.OSpace);
 
             var tables = new List<TableProvider>();
