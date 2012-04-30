@@ -6,7 +6,7 @@
     <authors>$author$</authors>
     <owners>$author$</owners>
     <licenseUrl>http://www.opensource.org/licenses/ms-pl</licenseUrl>
-    <projectUrl>http://blog.davidebbo.com/2011/01/using-dynamic-data-with-ef-code-first.html</projectUrl>
+    <projectUrl>https://github.com/davidebbo/DynamicData.EFCodeFirstProvider</projectUrl>
     <description>$description$</description>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System.Web.DynamicData" />
