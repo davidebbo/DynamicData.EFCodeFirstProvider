@@ -108,6 +108,9 @@ namespace DynamicData.EFCodeFirstProvider {
                     else if (edmType is PrimitiveType) {
                         base.ColumnType = ((PrimitiveType)edmType).ClrEquivalentType;
                     }
+                    else if (edmType.BuiltInTypeKind == BuiltInTypeKind.EnumType) {
+                        base.ColumnType = this.EntityTypeProperty.PropertyType;
+                    }
                     else {
                         Debug.Assert(false, String.Format(CultureInfo.CurrentCulture, "Unknown EdmType {0}.", edmType.GetType().FullName));
                     }
@@ -143,7 +146,10 @@ namespace DynamicData.EFCodeFirstProvider {
 
         internal static bool IsSupportedEdmMemberType(EdmMember member) {
             var edmType = member.TypeUsage.EdmType;
-            return edmType is EntityType || edmType is CollectionType || edmType is PrimitiveType;
+
+            return edmType is EntityType || edmType is CollectionType || edmType is PrimitiveType 
+                // EF5 enum support
+                || edmType.BuiltInTypeKind == BuiltInTypeKind.EnumType;
         }
     }
 }
