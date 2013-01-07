@@ -71,5 +71,15 @@ namespace DynamicData.EFCodeFirstProvider {
             return (IQueryable)CreateQueryMethod.Invoke(context,
                 new object[] { CreateQueryString, new ObjectParameter[0] });
         }
+
+        public override object EvaluateForeignKey(object row, string foreignKeyName)
+        {
+            // This fixes the {objectname} does not contain a property with the name '{navproperty}.Id'.
+            // This makes it use DataBinder.Eval any time the foreigntKeyName contains a dot.
+            if (foreignKeyName.Contains("."))
+                return System.Web.UI.DataBinder.Eval(row, foreignKeyName);
+            else
+                return base.EvaluateForeignKey(row, foreignKeyName);
+        }
     }
 }
